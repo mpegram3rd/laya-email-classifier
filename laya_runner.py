@@ -95,7 +95,7 @@ class LayaRunner:
                 "body": row.body,
                 "text": row.text
             }
-            result = self._agent.predict(row_data, self._questions)
+            result = self._agent.predict(self._context(row_data), self._questions)
             self._total_records += 1
 
             row_result = result["answers"]["email_category"]
