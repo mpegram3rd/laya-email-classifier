@@ -25,8 +25,8 @@ def main():
     # Preload checkpoints into memory for instant sub-35ms routing
     print("Starting model load")
     model_load = time.perf_counter_ns()
-#    agent = Router(preload=True, device="mps")
-    agent = laya.load("convaiinnovations/laya")
+    # agent = Router(preload=True, device="mps")
+    agent = laya.load("convaiinnovations/laya", preload=True, device="mps")
     print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
 
 
@@ -48,18 +48,18 @@ def main():
 
         # Process line-by-line (Memory efficient!)
         for row in reader:
-            context = row["text"]
+            # context = row["text"]
 
-#            context = {
-#                "subject": row['subject'],
-#                "body": row['body']
-#            }
+            context = {
+               "subject": row['subject'],
+               "body": row['body']
+            }
 
             result = agent.predict(context, question_payload)
             total_count += 1
 
             row_result = result["answers"]["email_category"]
-            if (row_result["choice"] != row['category']):
+            if row_result["choice"] != row['category']:
                 # confidence = row_result['confidence']
                 # if confidence > 0.55:
                 #     print(f"Mismatch: Id: {row['id']} Predicted: {row_result['choice']}, Actual: {row['category']}: Decision Confidence: {row_result['confidence']}")
