@@ -26,7 +26,7 @@ def main():
     print("Starting model load")
     model_load = time.perf_counter_ns()
     # agent = Router(preload=True, device="mps")
-    agent = laya.load("convaiinnovations/laya", preload=True, device="mps")
+    agent = laya.load("convaiinnovations/laya")
     print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
 
 
