@@ -89,6 +89,7 @@ class LayaRunner:
 
         df = pandas.read_csv(self._dataset_file)
 
+        failure_counts = {}
         for row in df.itertuples():
             row_data = {
                 "subject": row.subject,
@@ -100,6 +101,14 @@ class LayaRunner:
 
             row_result = result["answers"]["email_category"]
             if row_result["choice"] != row.category:
+                expected = row.category
+                actual = row_result["choice"]
+                key = expected + "+" + actual
+                failure_counts[key] = failure_counts.get(key, 0) + 1
+                # if key == "updates+promotions" and row_result["confidence"] > 0.55:
+                #     print(f"Mismatch: Id: {row.id} Predicted: {row_result['choice']}, Actual: {row.category}: Decision Confidence: {row_result['confidence']}")
+                #     print (row_data)
+
                 # confidence = row_result['confidence']
                 # if confidence > 0.55:
                 #     print(f"Mismatch: Id: {row['id']} Predicted: {row_result['choice']}, Actual: {row['category']}: Decision Confidence: {row_result['confidence']}")
@@ -107,6 +116,8 @@ class LayaRunner:
 
         print("Processing time (ms):", (time.perf_counter_ns() - file_load) / 1000000)
         self._report('Pandas')
+        for key in failure_counts:
+            print(f"Failure count for {key}: {failure_counts[key]}")
 
     def process_csv(self):
         """
