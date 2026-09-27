@@ -1,11 +1,4 @@
-import laya
-import csv
-from typing import Literal
-
-from laya import Router
-import time
-
-import laya_runner
+from laya_runner import LayaRunner, ContextTypes
 
 
 def questions():
@@ -25,27 +18,27 @@ def questions():
     }
 
 def main():
-    runner = laya_runner.LayaRunner()
+    runner = LayaRunner()
 
     # Run the direct model access permutations with CSV
     runner.use_router(False)
-    runner.context_type(laya_runner.ContextTypes.SIMPLE).process_csv()
-    runner.context_type(laya_runner.ContextTypes.STRUCTURED).process_csv()
+    runner.context_type(ContextTypes.SIMPLE).process_csv()
+    runner.context_type(ContextTypes.STRUCTURED).process_csv()
 
     # Run Router-based tests with CSV
     runner.use_router(True)
-    runner.context_type(laya_runner.ContextTypes.SIMPLE).process_csv()
-    runner.context_type(laya_runner.ContextTypes.STRUCTURED).process_csv()
+    runner.context_type(ContextTypes.SIMPLE).process_csv()
+    runner.context_type(ContextTypes.STRUCTURED).process_csv()
 
     # Switch over to using the pandas loader with direct model access
     runner.use_router(False)
-    runner.context_type(laya_runner.ContextTypes.SIMPLE).process_pandas()
-    runner.context_type(laya_runner.ContextTypes.STRUCTURED).process_pandas()
+    runner.context_type(ContextTypes.SIMPLE).process_pandas()
+    runner.context_type(ContextTypes.STRUCTURED).process_pandas()
 
     # Switch over to using the pandas loader with direct model access
     runner.use_router(True)
-    runner.context_type(laya_runner.ContextTypes.SIMPLE).process_pandas()
-    runner.context_type(laya_runner.ContextTypes.STRUCTURED).report_failures(True).process_pandas()
+    runner.context_type(ContextTypes.SIMPLE).process_pandas()
+    runner.context_type(ContextTypes.STRUCTURED).report_failures(True).process_pandas()
 
 
 if __name__ == "__main__":
