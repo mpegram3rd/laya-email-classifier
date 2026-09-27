@@ -45,7 +45,7 @@ def main():
     # Switch over to using the pandas loader with direct model access
     runner.use_router(True)
     runner.context_type(laya_runner.ContextTypes.SIMPLE).process_pandas()
-    runner.context_type(laya_runner.ContextTypes.STRUCTURED).report_failures().process_pandas()
+    runner.context_type(laya_runner.ContextTypes.STRUCTURED).report_failures(True).process_pandas()
 
 
 if __name__ == "__main__":

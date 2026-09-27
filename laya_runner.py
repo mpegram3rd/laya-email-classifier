@@ -68,7 +68,7 @@ class LayaRunner:
         return self
 
 
-    def report_failures(self, show_failures: bool = False) -> Self:
+    def report_failures(self, show_failures: bool) -> Self:
         """
         Indicate whether to include a failure report
         """
