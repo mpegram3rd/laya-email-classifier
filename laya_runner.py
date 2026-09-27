@@ -214,7 +214,7 @@ class LayaRunner:
         Retrieves a Direct Model Access agent from the cache if available or initializes a new one.
         :return:
         """
-        if cls._direct_model_agent[model_name] is None:
+        if cls._direct_model_agent.get(model_name) is None:
             print("Initializing Direct model: ", model_name)
             model_load = time.perf_counter_ns()
             cls._direct_model_agent[model_name] = laya.load(model_name)
