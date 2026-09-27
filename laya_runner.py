@@ -1,11 +1,15 @@
 import csv
 import time
-from typing import Self
+from enum import Enum
+from typing import Self, cast
 
 import laya
 import pandas
 from laya import Router
 
+class ContextTypes(Enum):
+    SIMPLE = 1
+    STRUCTURED = 2
 
 class LayaRunner:
     """
@@ -16,80 +20,73 @@ class LayaRunner:
     It will use a fluent builder pattern style for constructing
     the specific configuration of a new test.
     """
+    _router_agent: Router | None = None
+    _direct_model_agent = {}
+
     def __init__(self, dataset_file: str = "dataset/full_dataset.csv"):
         self._dataset_file = dataset_file
         self._questions = self._questions()
-        self._error_count = 0
-        self._total_records = 0
         self._context = lambda row: None # Note this will be replaced by a lambda using the builder
         self._agent = None
         self._structured_context = False
         self._using_router = False
         self._using_pandas = False
+        self._report_failures = False
+        self._error_count = 0
+        self._total_records = 0
+        self._failure_categories = {}
 
 
-    def structured_context(self) -> Self:
+    def context_type(self, context_type: ContextTypes = ContextTypes.SIMPLE) -> Self:
         """
-        Populates the lambda logic for obtaining contex using a
-        structured query
+        Determines how to provide context to the model
         :return: The LayaRunner instance to continue fluent builder
         """
-        self._structured_context = True
-        self._context = lambda row: {
+        if context_type == ContextTypes.SIMPLE:
+            self._structured_context = False
+            self._context = lambda row: row['text']
+        else:
+            self._structured_context = True
+            self._context = lambda row: {
                "subject": row['subject'],
                "body": row['body']
             }
 
         return self
 
-    def simple_context(self) -> Self:
-        """
-        Populates the lambda logic for obtaining contex using a simple query
-        :return: The LayaRunner instance to continue fluent builder
-        """
-        self._structured_context = False
-        self._context = lambda row: row['text']
-
-        return self
-
-    def use_router(self) -> Self:
+    def use_router(self, router_agent: bool = False, model_name: str = "convaiinnovations/laya") -> Self:
         """
         Instruct the processor to use an agent based off of Laya's model router
         :return: The LayaRunner instance to continue fluent builder
         """
-        self._using_router = True
-        print("Initializing models")
-        model_load = time.perf_counter_ns()
-        self._agent = Router(preload=True, device="mps")
-        print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
+        if router_agent:
+            self._agent = self.get_router_agent()
+        else:
+            self._agent = self.get_direct_model_agent(model_name)
 
         return self
 
-    def use_direct_model(self, model_name: str = "convaiinnovations/laya")  -> Self:
-        """
-        Instruct the processor to use a direct model instead of the Laya router
-        :param model_name: The name of the model to use (will use convaiinnovations/laya by default
-        :return: The LayaRunner instance to continue fluent builder
-        """
 
-        self._using_router = False
-        print("Loading model")
-        model_load = time.perf_counter_ns()
-        self._agent = laya.load(model_name)
-        print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
+    def report_failures(self, show_failures: bool = False) -> Self:
+        """
+        Indicate whether to include a failure report
+        """
+        self._report_failures = show_failures
 
         return self
+
 
     def process_pandas(self):
         """
         Processes the dataset using Pandas
         """
+        self._reset()
         print("Starting file load")
         file_load = time.perf_counter_ns()
 
         df = pandas.read_csv(self._dataset_file)
 
-        failure_counts = {}
+        
         for row in df.itertuples():
             row_data = {
                 "subject": row.subject,
@@ -104,25 +101,25 @@ class LayaRunner:
                 expected = row.category
                 actual = row_result["choice"]
                 key = expected + "+" + actual
-                failure_counts[key] = failure_counts.get(key, 0) + 1
+                self._failure_categories[key] = self._failure_categories.get(key, 0) + 1
                 # if key == "updates+promotions" and row_result["confidence"] > 0.55:
-                #     print(f"Mismatch: Id: {row.id} Predicted: {row_result['choice']}, Actual: {row.category}: Decision Confidence: {row_result['confidence']}")
+                #     print(f"Mismatch: Id: {row.id} Predicted: {actual}, Actual: {expected}: Decision Confidence: {row_result['confidence']}")
                 #     print (row_data)
-
+                # 
                 # confidence = row_result['confidence']
                 # if confidence > 0.55:
-                #     print(f"Mismatch: Id: {row['id']} Predicted: {row_result['choice']}, Actual: {row['category']}: Decision Confidence: {row_result['confidence']}")
+                #     print(f"Mismatch: Id: {row.id} Predicted: {row_result['choice']}, Actual: {row.category}: Decision Confidence: {row_result['confidence']}")
                 self._error_count += 1
 
         print("Processing time (ms):", (time.perf_counter_ns() - file_load) / 1000000)
         self._report('Pandas')
-        for key in failure_counts:
-            print(f"Failure count for {key}: {failure_counts[key]}")
+
 
     def process_csv(self):
         """
         Processes the dataset using the Python CSV parser
         """
+        self._reset()
         print("Starting file load")
         file_load = time.perf_counter_ns()
 
@@ -161,9 +158,21 @@ class LayaRunner:
 
         failure_rate = (self._error_count / self._total_records) * 100.0
         print("Failure Rate: ", failure_rate, "%")
+        if self._report_failures:
+            for key in self._failure_categories:
+                print(f"Failure count for {key}: {self._failure_categories[key]}")
+
         print("--------------------------------")
 
-
+    def _reset(self):
+        """
+        Reset key internal metrics used for reporting
+        :return:
+        """
+        self._error_count = 0
+        self._total_records = 0
+        self._failure_categories = {}
+        
     @staticmethod
     def _questions():
         """
@@ -185,3 +194,31 @@ class LayaRunner:
             }
         }
 
+    @classmethod
+    def get_router_agent(cls) -> Router:
+        """
+        Retrieves a Router-based agent from the cache if available or initializes a new one.
+        :return:
+        """
+        if cls._router_agent is None:
+            print("Initializing Router models")
+            model_load = time.perf_counter_ns()
+            cls._router_agent = Router(preload=True, device="mps")
+            print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
+
+        return cast(Router, cls._router_agent)
+
+    @classmethod
+    def get_direct_model_agent(cls, model_name: str) -> Router:
+        """
+        Retrieves a Direct Model Access agent from the cache if available or initializes a new one.
+        :return:
+        """
+        if cls._direct_model_agent[model_name] is None:
+            print("Initializing Direct model: ", model_name)
+            model_load = time.perf_counter_ns()
+            cls._direct_model_agent[model_name] = laya.load(model_name)
+
+            print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
+
+        return cls._direct_model_agent[model_name]

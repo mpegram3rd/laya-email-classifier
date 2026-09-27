@@ -25,53 +25,28 @@ def questions():
     }
 
 def main():
-    # (laya_runner.LayaRunner()
-    #     .simple_context()
-    #     .use_direct_model()
-    #     .process_csv()
-    #  )
+    runner = laya_runner.LayaRunner()
 
-    # (laya_runner.LayaRunner()
-    #     .simple_context()
-    #     .use_router()
-    #     .process_csv()
-    #  )
-    #
-    # (laya_runner.LayaRunner()
-    #     .structured_context()
-    #     .use_router()
-    #     .process_csv()
-    #  )
-    #
-    # (laya_runner.LayaRunner()
-    #     .structured_context()
-    #     .use_direct_model()
-    #     .process_csv()
-    #  )
-    #
-    # (laya_runner.LayaRunner()
-    #     .simple_context()
-    #     .use_direct_model()
-    #     .process_pandas()
-    #  )
-    #
-    # (laya_runner.LayaRunner()
-    #     .simple_context()
-    #     .use_router()
-    #     .process_pandas()
-    #  )
-    #
-    # (laya_runner.LayaRunner()
-    #     .structured_context()
-    #     .use_router()
-    #     .process_pandas()
-    #  )
-    #
-    (laya_runner.LayaRunner()
-        .structured_context()
-        .use_direct_model()
-        .process_pandas()
-     )
+    # Run the direct model access permutations with CSV
+    runner.use_router(False)
+    runner.context_type(laya_runner.ContextTypes.SIMPLE).process_csv()
+    runner.context_type(laya_runner.ContextTypes.STRUCTURED).process_csv()
+
+    # Run Router-based tests with CSV
+    runner.use_router(True)
+    runner.context_type(laya_runner.ContextTypes.SIMPLE).process_csv()
+    runner.context_type(laya_runner.ContextTypes.STRUCTURED).process_csv()
+
+    # Switch over to using the pandas loader with direct model access
+    runner.use_router(False)
+    runner.context_type(laya_runner.ContextTypes.SIMPLE).process_pandas()
+    runner.context_type(laya_runner.ContextTypes.STRUCTURED).process_pandas()
+
+    # Switch over to using the pandas loader with direct model access
+    runner.use_router(True)
+    runner.context_type(laya_runner.ContextTypes.SIMPLE).process_pandas()
+    runner.context_type(laya_runner.ContextTypes.STRUCTURED).report_failures().process_pandas()
+
 
 if __name__ == "__main__":
     main()
