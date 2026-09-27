@@ -153,6 +153,7 @@ class LayaRunner:
         print("Test Configuration: ")
         print(" - Structured Context: ", self._structured_context)
         print(" - Using Laya Router: ", self._using_router)
+        processor_type = "Router" if self._using_router else "Direct Model Access"
         print(" - Processor Type: ", processor_type)
         print()
 
