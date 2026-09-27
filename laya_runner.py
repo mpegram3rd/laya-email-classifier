@@ -56,9 +56,10 @@ class LayaRunner:
 
     def use_router(self, router_agent: bool = False, model_name: str = "convaiinnovations/laya") -> Self:
         """
-        Instruct the processor to use an agent based off of Laya's model router
+        Instruct the processor to use an agent based off of Laya's model router or direct model access
         :return: The LayaRunner instance to continue fluent builder
         """
+        self._using_router = router_agent
         if router_agent:
             self._agent = self.get_router_agent()
         else:
@@ -81,6 +82,7 @@ class LayaRunner:
         Processes the dataset using Pandas
         """
         self._reset()
+        self._report_test_configuration()
         print("Starting file load")
         file_load = time.perf_counter_ns()
 
@@ -120,6 +122,7 @@ class LayaRunner:
         Processes the dataset using the Python CSV parser
         """
         self._reset()
+        self._report_test_configuration()
         print("Starting file load")
         file_load = time.perf_counter_ns()
 
@@ -143,16 +146,20 @@ class LayaRunner:
 
         self._report('CSV')
 
-    def _report(self, processor_type: str):
+    def _report_test_configuration(self):
         """
         Prints a report of the processing
         """
         print("Test Configuration: ")
         print(" - Structured Context: ", self._structured_context)
         print(" - Using Laya Router: ", self._using_router)
-        print("- Processor Type: ", processor_type)
+        print(" - Processor Type: ", processor_type)
         print()
 
+    def _report(self, processor_type: str):
+        """
+        Prints a report of the processing
+        """
         print("Error Count: ", self._error_count)
         print("Total Rows: ", self._total_records)
 
