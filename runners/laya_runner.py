@@ -88,7 +88,7 @@ class LayaRunner(BaseRunner):
         print("Using Router agent")
         if cls._router_agent is None:
             model_load = time.perf_counter_ns()
-            cls._router_agent = Router(preload=True, device="mps")
+            cls._router_agent = Router(preload=True)
             print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
 
         return cast(Router, cls._router_agent)
