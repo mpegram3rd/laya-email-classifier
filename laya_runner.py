@@ -167,8 +167,8 @@ class LayaRunner:
         Retrieves a Router-based agent from the cache if available or initializes a new one.
         :return:
         """
+        print("Using Router agent")
         if cls._router_agent is None:
-            print("Initializing Router models")
             model_load = time.perf_counter_ns()
             cls._router_agent = Router(preload=True, device="mps")
             print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
@@ -181,8 +181,8 @@ class LayaRunner:
         Retrieves a Direct Model Access agent from the cache if available or initializes a new one.
         :return:
         """
+        print("Using Direct model: ", model_name)
         if cls._direct_model_agent.get(model_name) is None:
-            print("Initializing Direct model: ", model_name)
             model_load = time.perf_counter_ns()
             cls._direct_model_agent[model_name] = laya.load(model_name)
 
