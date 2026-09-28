@@ -8,4 +8,5 @@ dependencies = [
     "dotenv>=0.9.9",
     "laya>=0.3.20",
     "pydantic>=2.13.5",
+    "typesafe-sdk>=0.7.2",
 ]

@@ -6,9 +6,8 @@ from typing import Self, cast
 import laya
 from laya import Router
 
-class ContextTypes(Enum):
-    SIMPLE = 1
-    STRUCTURED = 2
+from models import ContextTypes
+
 
 class LayaRunner:
     """
