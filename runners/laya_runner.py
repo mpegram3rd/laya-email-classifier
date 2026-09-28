@@ -1,16 +1,14 @@
 import csv
 import time
-from enum import Enum
 from typing import Self, cast
 
 import laya
 from laya import Router
 
-class ContextTypes(Enum):
-    SIMPLE = 1
-    STRUCTURED = 2
+from runners.base_runner import BaseRunner
 
-class LayaRunner:
+
+class LayaRunner(BaseRunner):
     """
     This class will be used to configure and run various
     permutations of the email classifier, helping to assess
@@ -23,34 +21,11 @@ class LayaRunner:
     _direct_model_agent = {}
 
     def __init__(self, dataset_file: str = "dataset/full_dataset.csv"):
-        self._dataset_file = dataset_file
+        super().__init__(dataset_file)
         self._questions = self._questions()
         self._context = lambda row: None # Note this will be replaced by a lambda using the builder
         self._agent = None
-        self._structured_context = False
         self._using_router = False
-        self._report_failures = False
-        self._error_count = 0
-        self._total_records = 0
-        self._failure_categories = {}
-
-
-    def context_type(self, context_type: ContextTypes = ContextTypes.SIMPLE) -> Self:
-        """
-        Determines how to provide context to the model
-        :return: The LayaRunner instance to continue fluent builder
-        """
-        if context_type == ContextTypes.SIMPLE:
-            self._structured_context = False
-            self._context = lambda row: row['text']
-        else:
-            self._structured_context = True
-            self._context = lambda row: {
-               "subject": row['subject'],
-               "body": row['body']
-            }
-
-        return self
 
     def use_router(self, router_agent: bool = False, model_name: str = "convaiinnovations/laya") -> Self:
         """
@@ -64,16 +39,6 @@ class LayaRunner:
             self._agent = self.get_direct_model_agent(model_name)
 
         return self
-
-
-    def report_failures(self, show_failures: bool) -> Self:
-        """
-        Indicate whether to include a failure report
-        """
-        self._report_failures = show_failures
-
-        return self
-
 
     def process(self):
         """
@@ -103,43 +68,46 @@ class LayaRunner:
 
         print("Processing time (ms):", (time.perf_counter_ns() - file_load) / 1000000)
 
-        self._report('CSV')
+        self._report()
 
     def _report_test_configuration(self):
         """
         Prints a report of the processing
         """
-        print("Test Configuration: ")
-        print(" - Structured Context: ", self._structured_context)
-        print(" - Using Laya Router: ", self._using_router)
+        super()._report_test_configuration()
         processor_type = "Router" if self._using_router else "Direct Model Access"
         print(" - Processor Type: ", processor_type)
         print()
 
-    def _report(self, processor_type: str):
+    @classmethod
+    def get_router_agent(cls) -> Router:
         """
-        Prints a report of the processing
-        """
-        print("Error Count: ", self._error_count)
-        print("Total Rows: ", self._total_records)
-
-        failure_rate = (self._error_count / self._total_records) * 100.0
-        print("Failure Rate: ", failure_rate, "%")
-        if self._report_failures:
-            for key in self._failure_categories:
-                print(f"Failure count for {key}: {self._failure_categories[key]}")
-
-        print("--------------------------------")
-
-    def _reset(self):
-        """
-        Reset key internal metrics used for reporting
+        Retrieves a Router-based agent from the cache if available or initializes a new one.
         :return:
         """
-        self._error_count = 0
-        self._total_records = 0
-        self._failure_categories = {}
-        
+        print("Using Router agent")
+        if cls._router_agent is None:
+            model_load = time.perf_counter_ns()
+            cls._router_agent = Router(preload=True)
+            print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
+
+        return cast(Router, cls._router_agent)
+
+    @classmethod
+    def get_direct_model_agent(cls, model_name: str) -> Router:
+        """
+        Retrieves a Direct Model Access agent from the cache if available or initializes a new one.
+        :return:
+        """
+        print("Using Direct model: ", model_name)
+        if cls._direct_model_agent.get(model_name) is None:
+            model_load = time.perf_counter_ns()
+            cls._direct_model_agent[model_name] = laya.load(model_name)
+
+            print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
+
+        return cls._direct_model_agent[model_name]
+
     @staticmethod
     def _questions():
         """
@@ -160,32 +128,3 @@ class LayaRunner:
                 }
             }
         }
-
-    @classmethod
-    def get_router_agent(cls) -> Router:
-        """
-        Retrieves a Router-based agent from the cache if available or initializes a new one.
-        :return:
-        """
-        print("Using Router agent")
-        if cls._router_agent is None:
-            model_load = time.perf_counter_ns()
-            cls._router_agent = Router(preload=True, device="mps")
-            print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
-
-        return cast(Router, cls._router_agent)
-
-    @classmethod
-    def get_direct_model_agent(cls, model_name: str) -> Router:
-        """
-        Retrieves a Direct Model Access agent from the cache if available or initializes a new one.
-        :return:
-        """
-        print("Using Direct model: ", model_name)
-        if cls._direct_model_agent.get(model_name) is None:
-            model_load = time.perf_counter_ns()
-            cls._direct_model_agent[model_name] = laya.load(model_name)
-
-            print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
-
-        return cls._direct_model_agent[model_name]
