@@ -5,7 +5,7 @@ from typing import Self, cast
 import laya
 from laya import Router
 
-from runners.base_runner import BaseRunner
+from runners import BaseRunner
 
 
 class LayaRunner(BaseRunner):

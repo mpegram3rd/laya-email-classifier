@@ -4,7 +4,7 @@ import time
 
 from typesafe_sdk import TypeSafeClient, Choice
 
-from runners.base_runner import BaseRunner
+from runners import BaseRunner
 
 
 class JevRunner(BaseRunner):

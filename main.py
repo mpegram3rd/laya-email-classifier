@@ -1,8 +1,8 @@
 from dotenv import load_dotenv
 
-from runners.jev_runner import JevRunner
-from runners.laya_runner import LayaRunner
 from models import ContextTypes
+from runners import LayaRunner, JevRunner
+
 
 def main():
     load_dotenv()
