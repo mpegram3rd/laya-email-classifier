@@ -14,7 +14,7 @@ After some experimentation and refinement with Laya, I added the ability to run 
 This code, right now, is tightly tied to a specific dataset. Specifically the 
 [jason23322/high-accuracy-email-classifier on Huggingface](https://huggingface.co/datasets/jason23322/high-accuracy-email-classifier)
 
-Download the [Full Dataset CSV File](https://huggingface.co/datasets/jason23322/high-accuracy-email-classifier/resolve/main/email_classification_dataset.csv) and place it in the `data` folder.
+Download the [Full Dataset CSV File](https://huggingface.co/datasets/jason23322/high-accuracy-email-classifier/tree/main) and place it in the `data` folder.
 
 ## Running the App
 1. Run `uv sync`
