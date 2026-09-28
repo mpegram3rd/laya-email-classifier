@@ -1,15 +1,14 @@
 import csv
 import time
-from enum import Enum
 from typing import Self, cast
 
 import laya
 from laya import Router
 
-from models import ContextTypes
+from runners.base_runner import BaseRunner
 
 
-class LayaRunner:
+class LayaRunner(BaseRunner):
     """
     This class will be used to configure and run various
     permutations of the email classifier, helping to assess
@@ -22,34 +21,11 @@ class LayaRunner:
     _direct_model_agent = {}
 
     def __init__(self, dataset_file: str = "dataset/full_dataset.csv"):
-        self._dataset_file = dataset_file
+        super().__init__(dataset_file)
         self._questions = self._questions()
         self._context = lambda row: None # Note this will be replaced by a lambda using the builder
         self._agent = None
-        self._structured_context = False
         self._using_router = False
-        self._report_failures = False
-        self._error_count = 0
-        self._total_records = 0
-        self._failure_categories = {}
-
-
-    def context_type(self, context_type: ContextTypes = ContextTypes.SIMPLE) -> Self:
-        """
-        Determines how to provide context to the model
-        :return: The LayaRunner instance to continue fluent builder
-        """
-        if context_type == ContextTypes.SIMPLE:
-            self._structured_context = False
-            self._context = lambda row: row['text']
-        else:
-            self._structured_context = True
-            self._context = lambda row: {
-               "subject": row['subject'],
-               "body": row['body']
-            }
-
-        return self
 
     def use_router(self, router_agent: bool = False, model_name: str = "convaiinnovations/laya") -> Self:
         """
@@ -63,16 +39,6 @@ class LayaRunner:
             self._agent = self.get_direct_model_agent(model_name)
 
         return self
-
-
-    def report_failures(self, show_failures: bool) -> Self:
-        """
-        Indicate whether to include a failure report
-        """
-        self._report_failures = show_failures
-
-        return self
-
 
     def process(self):
         """
@@ -102,63 +68,16 @@ class LayaRunner:
 
         print("Processing time (ms):", (time.perf_counter_ns() - file_load) / 1000000)
 
-        self._report('CSV')
+        self._report()
 
     def _report_test_configuration(self):
         """
         Prints a report of the processing
         """
-        print("Test Configuration: ")
-        print(" - Structured Context: ", self._structured_context)
-        print(" - Using Laya Router: ", self._using_router)
+        super()._report_test_configuration()
         processor_type = "Router" if self._using_router else "Direct Model Access"
         print(" - Processor Type: ", processor_type)
         print()
-
-    def _report(self, processor_type: str):
-        """
-        Prints a report of the processing
-        """
-        print("Error Count: ", self._error_count)
-        print("Total Rows: ", self._total_records)
-
-        failure_rate = (self._error_count / self._total_records) * 100.0
-        print("Failure Rate: ", failure_rate, "%")
-        if self._report_failures:
-            for key in self._failure_categories:
-                print(f"Failure count for {key}: {self._failure_categories[key]}")
-
-        print("--------------------------------")
-
-    def _reset(self):
-        """
-        Reset key internal metrics used for reporting
-        :return:
-        """
-        self._error_count = 0
-        self._total_records = 0
-        self._failure_categories = {}
-        
-    @staticmethod
-    def _questions():
-        """
-        Returns a collection of questions to be asked.
-        """
-
-        return {
-            "email_category": {
-                "type": "choice",
-                "instructions": "Which category does this email belong to?",
-                "criteria": {
-                    "promotions": "Marketing emails, sales, offers, and advertisements",
-                    "spam": "Unwanted emails, scams, and phishing attempts",
-                    "social_media": "Notifications from social platforms",
-                    "forum": "Forum posts, discussions, and community notifications",
-                    "verify_code": "Authentication codes and verification emails",
-                    "updates": "System updates, security patches, maintenance notices"
-                }
-            }
-        }
 
     @classmethod
     def get_router_agent(cls) -> Router:
@@ -188,3 +107,24 @@ class LayaRunner:
             print("Model load time (ms):", (time.perf_counter_ns() - model_load) / 1000000)
 
         return cls._direct_model_agent[model_name]
+
+    @staticmethod
+    def _questions():
+        """
+        Returns a collection of questions to be asked.
+        """
+
+        return {
+            "email_category": {
+                "type": "choice",
+                "instructions": "Which category does this email belong to?",
+                "criteria": {
+                    "promotions": "Marketing emails, sales, offers, and advertisements",
+                    "spam": "Unwanted emails, scams, and phishing attempts",
+                    "social_media": "Notifications from social platforms",
+                    "forum": "Forum posts, discussions, and community notifications",
+                    "verify_code": "Authentication codes and verification emails",
+                    "updates": "System updates, security patches, maintenance notices"
+                }
+            }
+        }
