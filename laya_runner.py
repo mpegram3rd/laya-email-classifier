@@ -4,7 +4,6 @@ from enum import Enum
 from typing import Self, cast
 
 import laya
-import pandas
 from laya import Router
 
 class ContextTypes(Enum):
@@ -30,7 +29,6 @@ class LayaRunner:
         self._agent = None
         self._structured_context = False
         self._using_router = False
-        self._using_pandas = False
         self._report_failures = False
         self._error_count = 0
         self._total_records = 0
@@ -77,47 +75,7 @@ class LayaRunner:
         return self
 
 
-    def process_pandas(self):
-        """
-        Processes the dataset using Pandas
-        """
-        self._reset()
-        self._report_test_configuration()
-        print("Starting file load")
-        file_load = time.perf_counter_ns()
-
-        df = pandas.read_csv(self._dataset_file)
-
-        
-        for row in df.itertuples():
-            row_data = {
-                "subject": row.subject,
-                "body": row.body,
-                "text": row.text
-            }
-            result = self._agent.predict(self._context(row_data), self._questions)
-            self._total_records += 1
-
-            row_result = result["answers"]["email_category"]
-            if row_result["choice"] != row.category:
-                expected = row.category
-                actual = row_result["choice"]
-                key = expected + "+" + actual
-                self._failure_categories[key] = self._failure_categories.get(key, 0) + 1
-                # if key == "updates+promotions" and row_result["confidence"] > 0.55:
-                #     print(f"Mismatch: Id: {row.id} Predicted: {actual}, Actual: {expected}: Decision Confidence: {row_result['confidence']}")
-                #     print (row_data)
-                # 
-                # confidence = row_result['confidence']
-                # if confidence > 0.55:
-                #     print(f"Mismatch: Id: {row.id} Predicted: {row_result['choice']}, Actual: {row.category}: Decision Confidence: {row_result['confidence']}")
-                self._error_count += 1
-
-        print("Processing time (ms):", (time.perf_counter_ns() - file_load) / 1000000)
-        self._report('Pandas')
-
-
-    def process_csv(self):
+    def process(self):
         """
         Processes the dataset using the Python CSV parser
         """
@@ -137,9 +95,10 @@ class LayaRunner:
 
                 row_result = result["answers"]["email_category"]
                 if row_result["choice"] != row['category']:
-                    # confidence = row_result['confidence']
-                    # if confidence > 0.55:
-                    #     print(f"Mismatch: Id: {row['id']} Predicted: {row_result['choice']}, Actual: {row['category']}: Decision Confidence: {row_result['confidence']}")
+                    expected = row['category']
+                    actual = row_result["choice"]
+                    key = expected + "+" + actual
+                    self._failure_categories[key] = self._failure_categories.get(key, 0) + 1
                     self._error_count += 1
 
         print("Processing time (ms):", (time.perf_counter_ns() - file_load) / 1000000)
