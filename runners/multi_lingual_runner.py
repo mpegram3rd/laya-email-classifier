@@ -27,6 +27,7 @@ class MultiLingualRunner(BaseRunner):
         self._context = lambda row: None # Note this will be replaced by a lambda using the builder
         self._agent = None
         self._using_router = False
+        self._skip_count = 0
 
     def context_type(self, context_type: ContextTypes = ContextTypes.SIMPLE) -> Self:
         """
@@ -68,8 +69,9 @@ class MultiLingualRunner(BaseRunner):
 
         for row in streamed_dataset:
             email_text = self._context(row)
-            if len(email_text) > 8192:
-                print("Skipping record with text length > 8192: ", len(email_text))
+            if len(email_text) > 7900:
+                print("Skipping record with text length > 7900: ", len(email_text))
+                self._skip_count += 1
                 continue
             result = self._agent.predict(email_text, self._questions)
             self._total_records += 1
@@ -139,3 +141,11 @@ class MultiLingualRunner(BaseRunner):
                 "instructions": "Is this email spam?",
             }
         }
+    
+    def _reset(self):
+        super()._reset()
+        self._skip_count = 0
+
+    def _report(self):
+        super()._report()
+        print("  - Skip Count: ", self._skip_count)
