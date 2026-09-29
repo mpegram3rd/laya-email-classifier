@@ -64,13 +64,16 @@ class MultiLingualRunner(BaseRunner):
         print("Starting file load")
         file_load = time.perf_counter_ns()
 
-        streamed_dataset = load_dataset(self._dataset_file, split="train", streaming=True)
+        streamed_dataset = load_dataset(self._dataset_file, split="validation", streaming=True)
 
         for row in streamed_dataset:
             email_text = self._context(row)
+            if len(email_text) > 8192:
+                print("Skipping record with text length > 8192: ", len(email_text))
+                continue
             result = self._agent.predict(email_text, self._questions)
             self._total_records += 1
-            if self._total_records % 1000 == 0:
+            if self._total_records % 10000 == 0:
                 print("Processed records: ", self._total_records)
 
             row_result = result["answers"]["email_category"]

@@ -8,10 +8,17 @@ def main():
     load_dotenv()
 
     multi_lingual_runner = MultiLingualRunner("dataset/matters-spam/data")
+    # multi_lingual_runner.use_router(False, "convaiinnovations/laya-multilingual") \
+    multi_lingual_runner.use_router(False, "Modusnsus/laya-typed-decisions-multilingual") \
+        .context_type(ContextTypes.SIMPLE) \
+        .report_failures(True) \
+        .process()
+
     multi_lingual_runner.use_router(False, "convaiinnovations/laya-multilingual") \
         .context_type(ContextTypes.SIMPLE) \
         .report_failures(True) \
         .process()
+
     # runner = LayaRunner()
 
     # Test direct model access permutations with each model variant using the simple context type
