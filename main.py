@@ -8,7 +8,7 @@ def main():
     load_dotenv()
 
     multi_lingual_runner = MultiLingualRunner("dataset/matters-spam/data")
-    # multi_lingual_runner.use_router(False, "convaiinnovations/laya-multilingual") \
+    # This is a mashup of Laya's multi-lingual model and it's typed decision tuned model
     multi_lingual_runner.use_router(False, "Modusnsus/laya-typed-decisions-multilingual") \
         .context_type(ContextTypes.SIMPLE) \
         .report_failures(True) \

@@ -65,12 +65,11 @@ class MultiLingualRunner(BaseRunner):
         print("Starting file load")
         file_load = time.perf_counter_ns()
 
-        streamed_dataset = load_dataset(self._dataset_file, split="validation", streaming=True)
+        streamed_dataset = load_dataset(self._dataset_file, split="test", streaming=True)
 
         for row in streamed_dataset:
             email_text = self._context(row)
             if len(email_text) > 7900:
-                print("Skipping record with text length > 7900: ", len(email_text))
                 self._skip_count += 1
                 continue
             result = self._agent.predict(email_text, self._questions)
@@ -147,5 +146,5 @@ class MultiLingualRunner(BaseRunner):
         self._skip_count = 0
 
     def _report(self):
+        print("Skipped Records: ", self._skip_count)
         super()._report()
-        print("  - Skip Count: ", self._skip_count)
