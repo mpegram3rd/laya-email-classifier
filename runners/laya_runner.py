@@ -142,17 +142,6 @@ class LayaRunner(BaseRunner):
             "sentiment": {
                 "type": "score",
                 "instructions": "What was the general tone of the email message",
-                "criteria": {
-                    "angry": "Strong negative emotion characterized by hostility, resentment, or a desire to confront a perceived problem.",
-                    "furious": "Extremely intense anger, often involving outrage or a strong sense that something is unacceptable.",
-                    "frustrated": "Negative emotion arising when expectations, goals, or needs are blocked or unmet.",
-                    "annoyed": "Mild to moderate irritation caused by something perceived as bothersome, inconvenient, or unpleasant.",
-                    "negative": "Generally unfavorable or pessimistic sentiment without necessarily expressing a specific strong emotion.",
-                    "neutral": "Little or no discernible positive or negative emotional sentiment.",
-                    "positive": "Generally favorable sentiment expressing approval, optimism, or satisfaction.",
-                    "happy": "Clearly positive emotion characterized by pleasure, enjoyment, or general satisfaction.",
-                    "delighted": "Strong positive emotion reflecting considerable pleasure, enthusiasm, or appreciation.",
-                    "elated": "Extremely intense positive emotion characterized by exuberance, euphoria, or overwhelming joy."
-                }
+                "criteria": ["angry", "furious", "frustrated", "annoyed", "negative", "neutral", "positive", "happy", "delighted", "elated"]
             },
         }
